@@ -10,7 +10,7 @@ import re
 from bs4 import BeautifulSoup
 from .stringanalysis import FileAnalysis
 from androguard.core.analysis.analysis import Analysis
-from androguard.core.androconf import show_logging
+from androguard.core.androconf import show_logging as androguard_show_logging
 from androguard.core.bytecodes.apk import APK
 from androguard.core.bytecodes.dvm import DalvikVMFormat
 from androguard.core.analysis.analysis import MethodClassAnalysis
@@ -24,7 +24,7 @@ import hashlib
 from . import smaliparser
 
 
-show_logging(level=logging.CRITICAL)  # androguard
+androguard_show_logging(level=logging.CRITICAL)
 
 
 class MyAPK:
@@ -35,9 +35,18 @@ class MyAPK:
         self.name_only_apk = self.name_apk.split("/")[-1].rsplit(".", 1)[0]
         self.conf = conf
         self.apk = APK(name_file)
-        self.app_name = self.apk.get_app_name()
-        self.package_name = self.apk.get_package()
-        self.target_sdk = self.apk.get_target_sdk_version()
+        try:
+            self.app_name = self.apk.get_app_name()
+        except Exception:
+            self.app_name = self.name_only_apk
+        try:
+            self.package_name = self.apk.get_package()
+        except Exception:
+            self.package_name = "unknown.package"
+        try:
+            self.target_sdk = self.apk.get_target_sdk_version()
+        except Exception:
+            self.target_sdk = None
         self.dalviks_format = None
         self.analysis_object = None
         self.dict_file_with_string = dict()  # file che contengono la stringa ricercata

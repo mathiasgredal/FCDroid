@@ -3,6 +3,7 @@ import argparse
 import glob
 import json
 import subprocess
+import shutil
 from zipfile import BadZipfile
 import os
 from .MyAPK import MyAPK
@@ -215,8 +216,9 @@ def analyze_start(conf, apk_to_analyze, tag, string_to_find, api_monitor_dict=No
     except BadZipfile:
         logger.logger.error("APK corrupted")
         print(bcolors.FAIL+"APK corrupted"+bcolors.ENDC)
-    # except Exception as e:
-    #    print("Exception in hybrid inspector {}".format(e))
+    except Exception as e:
+        logger.logger.error("Unexpected error during analysis: %s", str(e))
+        print(bcolors.FAIL+"Error while analyzing APK: {0}".format(e)+bcolors.ENDC)
 
 def analysis_yet_done(result,apk_to_analyze):
     
@@ -316,7 +318,7 @@ def main():
             
             list_apk_to_analyze = list(set(list_apk_to_analyze)-set(list_apk_yet_analyzed))
             if len(list_apk_to_analyze) > 0:  
-                print_summary(list_apk_to_analyze,args.file_ouptut_stat, second_start)
+                print_summary(list_apk_to_analyze,args.file_output_stat, second_start)
 
         elif args.file_name is not None:
             analyze_start(conf, args.file_name, tag, args.string_to_find)
@@ -330,6 +332,9 @@ def scan_retire(apk):
         method that use retirejs to scan eventually vulnerability 
         in library js used by app
     """
+    if shutil.which("retire") is None:
+        return None, None
+
     dir_apk_tool = "temp_dir_"+apk.name_only_apk
     cmd = ['retire','-j','--outputformat','json','--path',dir_apk_tool]
     process = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
